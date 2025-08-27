@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import Heading from '@/components/ui/Heading'
 
 interface Message {
   id: string
@@ -120,7 +121,7 @@ export default function Home() {
       <div className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
           <div className="mr-4 flex">
-            <h1 className="text-lg font-semibold">Constitution AI Assistant</h1>
+            <h1 className="text-lg lg:text-xl font-black mx-6 quantico-regular">Constitution AI Assistant</h1>
           </div>
           <Button 
             variant="outline" 
@@ -184,8 +185,9 @@ export default function Home() {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-2">Welcome to Constitution AI</h2>
-                  <p className="text-muted-foreground">
+                  {/* <h2 className="text-2xl font-bold mb-2">Welcome to Constitution AI</h2> */}
+                  <Heading title='Welcome to Constitution AI' />
+                  <p className=" mt-4 text-gray-500">
                     Ask me anything about the Indian Constitution. I can help you understand articles, 
                     fundamental rights, directive principles, and more.
                   </p>
@@ -243,7 +245,7 @@ export default function Home() {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
+        <div className="border-t border-gray-200 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
           <div className="max-w-3xl mx-auto">
             <PlaceholdersAndVanishInput
               placeholders={placeholders}

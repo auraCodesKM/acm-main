@@ -4,6 +4,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://0444da19aa74.ngrok-free.app"
+    "NEXT_PUBLIC_API_URL": "https://44aa2e76cf01.ngrok-free.app"
   }
 }

@@ -34,7 +34,7 @@ export default function Home() {
     "Explain the directive principles of state policy",
   ]
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = (_e: React.ChangeEvent<HTMLInputElement>) => {
     // Handle input changes if needed
   }
 
@@ -61,11 +61,8 @@ export default function Home() {
     setCustomDocuments(prev => prev.filter(doc => doc !== url))
   }
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const value = formData.get('input') as string || ''
-    
+
+  const onSubmit = (value: string) => {
     if (!value.trim()) return
 
     const userMessage: Message = {
@@ -100,54 +97,6 @@ export default function Home() {
         isUser: false,
         timestamp: new Date(),
         sources: customDocuments
-      }
-      setMessages(prev => [...prev, aiMessage])
-    })
-    .catch(() => {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "Sorry, I encountered an error while processing your question. Please try again.",
-        isUser: false,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
-    })
-    .finally(() => {
-      setIsLoading(false)
-    })
-  }
-
-  const handleSubmitValue = (value: string) => {
-    if (!value.trim()) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: value,
-      isUser: true,
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setIsLoading(true)
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        questions: [value],
-        documents: "https://cdnbbsr.s3waas.gov.in/s380537a945c7aaa788ccfcdf1b99b5d8f/uploads/2024/07/20240716890312078.pdf"
-      }),
-    })
-    .then(response => response.json())
-    .then(data => {
-      const answer = data.answers?.[0] || "I couldn't find an answer to your question."
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: answer,
-        isUser: false,
-        timestamp: new Date()
       }
       setMessages(prev => [...prev, aiMessage])
     })

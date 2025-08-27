@@ -11,39 +11,52 @@ export function PlaceholdersAndVanishInput({
 }: {
   placeholders: string[];
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (value: string) => void;
 }) {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
+  const [displayText, setDisplayText] = useState("");
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const startAnimation = () => {
-    intervalRef.current = setInterval(() => {
-      setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
-    }, 3000);
-  };
-  const handleVisibilityChange = () => {
-    if (document.visibilityState !== "visible" && intervalRef.current) {
-      clearInterval(intervalRef.current); // Clear the interval when the tab is not visible
-      intervalRef.current = null;
-    } else if (document.visibilityState === "visible") {
-      startAnimation(); // Restart the interval when the tab becomes visible
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const startAnimation = useCallback(() => {
+    let i = 0;
+    const typingEffect = () => {
+      const text = placeholders[currentPlaceholder % placeholders.length];
+      if (i < text.length) {
+        setDisplayText(text.slice(0, i + 1));
+        i++;
+        animationTimeoutRef.current = setTimeout(typingEffect, 50);
+      } else {
+        animationTimeoutRef.current = setTimeout(() => {
+          setDisplayText("");
+          setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
+          i = 0;
+          animationTimeoutRef.current = setTimeout(typingEffect, 500);
+        }, 1000);
+      }
+    };
+    typingEffect();
+  }, [placeholders, currentPlaceholder]);
+
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState !== "visible" && animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
     }
-  };
+  }, []);
 
   useEffect(() => {
     startAnimation();
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
       }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [placeholders]);
+  }, [startAnimation, handleVisibilityChange]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const newDataRef = useRef<any[]>([]);
+  const newDataRef = useRef<Array<{ x: number; y: number; r: number; color: string }>>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [animating, setAnimating] = useState(false);
@@ -67,12 +80,12 @@ export function PlaceholdersAndVanishInput({
 
     const imageData = ctx.getImageData(0, 0, 800, 800);
     const pixelData = imageData.data;
-    const newData: any[] = [];
+    const newData: Array<{ x: number; y: number; color: [number, number, number, number] }> = [];
 
     for (let t = 0; t < 800; t++) {
-      let i = 4 * t * 800;
+      const i = 4 * t * 800;
       for (let n = 0; n < 800; n++) {
-        let e = i + 4 * n;
+        const e = i + 4 * n;
         if (
           pixelData[e] !== 0 &&
           pixelData[e + 1] !== 0 &&
@@ -133,8 +146,7 @@ export function PlaceholdersAndVanishInput({
               ctx.beginPath();
               ctx.rect(n, i, s, s);
               ctx.fillStyle = color;
-              ctx.strokeStyle = color;
-              ctx.stroke();
+              ctx.fill();
             }
           });
         }
@@ -172,8 +184,9 @@ export function PlaceholdersAndVanishInput({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     vanishAndSubmit();
-    onSubmit && onSubmit(e);
+    onSubmit && onSubmit(value);
   };
+
   return (
     <form
       className={cn(
@@ -184,13 +197,12 @@ export function PlaceholdersAndVanishInput({
     >
       <canvas
         className={cn(
-          "absolute pointer-events-none  text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0 pr-20",
+          "absolute pointer-events-none text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert-0 dark:invert",
           !animating ? "opacity-0" : "opacity-100"
         )}
         ref={canvasRef}
       />
       <input
-        name="input"
         onChange={(e) => {
           if (!animating) {
             setValue(e.target.value);
@@ -201,6 +213,7 @@ export function PlaceholdersAndVanishInput({
         ref={inputRef}
         value={value}
         type="text"
+        name="input"
         className={cn(
           "w-full relative text-sm sm:text-base z-50 border-none dark:text-white bg-transparent text-black h-full rounded-full focus:outline-none focus:ring-0 pl-4 sm:pl-10 pr-20",
           animating && "text-transparent dark:text-transparent"
@@ -267,7 +280,7 @@ export function PlaceholdersAndVanishInput({
               }}
               className="dark:text-zinc-500 text-sm sm:text-base font-normal text-neutral-500 pl-4 sm:pl-12 text-left w-[calc(100%-2rem)] truncate"
             >
-              {placeholders[currentPlaceholder]}
+              {displayText}
             </motion.p>
           )}
         </AnimatePresence>
